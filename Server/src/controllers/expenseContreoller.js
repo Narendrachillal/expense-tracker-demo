@@ -1,4 +1,5 @@
 import Expense from "../Models/Expense.js";
+import PDFDocument from "pdfkit";
 
 export const addExpense = async (req, res) => {
   try {
@@ -41,5 +42,57 @@ export const getExpenses = async (req, res) => {
     res.json(expenses);
   } catch (error) {
     res.status(500).json({ message: "Error fetching expenses" });
+  }
+};
+
+export const exportPDF = async (req, res) => {
+  try {
+    const expenses = await Expense.find({ user: req.user.id }); // Fetch all expenses
+
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="expenses.pdf"');
+
+    doc.pipe(res);
+
+    // Title
+    doc.fontSize(20).text("Expense Report", { align: "center" }).moveDown(2);
+
+    // Define Table Column Widths
+    const columnWidths = [100, 150, 250];
+    const startX = 50;
+    let y = doc.y;
+
+    // **Table Header**
+    doc
+      .fontSize(12)
+      .text("Amount (Rs)", startX, y, { width: columnWidths[0], bold: true })
+      .text("Category", startX + columnWidths[0], y, { width: columnWidths[1] })
+      .text("Description", startX + columnWidths[0] + columnWidths[1], y, {
+        width: columnWidths[2],
+      });
+
+    y += 20; // Move Y position
+
+    // **Draw Line Under Header**
+    doc.moveTo(startX, y).lineTo(550, y).stroke();
+    y += 10;
+
+    // **Table Rows**
+    expenses.forEach(({ amount, category, description }) => {
+      doc
+        .fontSize(10)
+        .text(amount.toString(), startX, y, { width: columnWidths[0] })
+        .text(category, startX + columnWidths[0], y, { width: columnWidths[1] })
+        .text(description, startX + columnWidths[0] + columnWidths[1], y, {
+          width: columnWidths[2],
+        });
+      y += 20;
+    });
+
+    doc.end();
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    res.status(500).json({ error: "Failed to generate PDF" });
   }
 };

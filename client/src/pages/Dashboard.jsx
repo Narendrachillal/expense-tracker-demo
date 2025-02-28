@@ -89,6 +89,38 @@ const Dashboard = () => {
       console.error(error);
     }
   };
+  const handleDownloadPDF = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get JWT token from storage
+
+      if (!token) {
+        alert("You must be logged in to download the report.");
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/api/expenses/export-pdf", // Update with your backend URL
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add token in headers
+          },
+          responseType: "blob", // Get binary data
+        }
+      );
+
+      // Create a downloadable PDF file
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "expenses.pdf"); // Set filename
+      document.body.appendChild(link);
+      link.click(); // Trigger download
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert(error.response?.data?.message || "Error downloading the PDF");
+    }
+  };
 
   // Calculate totals
   const totalIncome = expenses
@@ -186,6 +218,14 @@ const Dashboard = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDownloadPDF}
+        sx={{ mt: 2 }}
+      >
+        Download PDF Report
+      </Button>
     </Container>
   );
 };
