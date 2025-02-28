@@ -16,9 +16,16 @@ import {
   FormControl,
   InputLabel,
   Typography,
+  Box,
+  styled,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+
+const ButtonModal = styled(Button)({
+  width: "30%",
+  marginLeft:"30%"
+});
 
 const Dashboard = () => {
   const [expenses, setExpenses] = useState([]);
@@ -134,11 +141,25 @@ const Dashboard = () => {
   const balance = totalIncome - totalExpenses;
 
   return (
-    <Container>
+    <Container
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+      }}
+    >
       {/* Summary Section */}
       <Paper
-        elevation={3}
-        sx={{ padding: 2, marginBottom: 2, textAlign: "center" }}
+        elevation={0}
+        sx={{
+          padding: 2,
+          marginBottom: 2,
+          textAlign: "center",
+          display: "flex",
+          gap: 5,
+          alignItems: "center",
+          marginLeft: "20%",
+        }}
       >
         <Typography variant="h6">Summary</Typography>
         <Typography>Total Income: ₹{totalIncome}</Typography>
@@ -149,36 +170,41 @@ const Dashboard = () => {
       </Paper>
 
       {/* Input Fields */}
-      <TextField
-        label="Amount"
-        type="number"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
-      <TextField
-        label="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Category</InputLabel>
-        <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <MenuItem value="Expense">Expense</MenuItem>
-          <MenuItem value="Income">Income</MenuItem>
-        </Select>
-      </FormControl>
-      <Button
-        onClick={addExpense}
-        variant="contained"
-        color="primary"
-        fullWidth
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          width: "500px",
+          marginLeft: "25%",
+        }}
       >
-        Add Expense
-      </Button>
+        <TextField
+          label="Amount"
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          margin="normal"
+        />
+        <TextField
+          label="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          margin="normal"
+        />
+        <FormControl margin="normal">
+          <InputLabel>Category</InputLabel>
+          <Select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <MenuItem value="Expense">Expense</MenuItem>
+            <MenuItem value="Income">Income</MenuItem>
+          </Select>
+        </FormControl>
+        <ButtonModal onClick={addExpense} variant="contained" color="primary">
+          Add Expense
+        </ButtonModal>
+      </Box>
 
       {/* Expense Table */}
       <TableContainer component={Paper} sx={{ marginTop: 2 }}>
@@ -218,14 +244,14 @@ const Dashboard = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button
+      <ButtonModal
         variant="contained"
         color="primary"
         onClick={handleDownloadPDF}
         sx={{ mt: 2 }}
       >
         Download PDF Report
-      </Button>
+      </ButtonModal>
     </Container>
   );
 };

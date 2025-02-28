@@ -49,16 +49,22 @@ export const exportPDF = async (req, res) => {
   try {
     const expenses = await Expense.find({ user: req.user.id }); // Fetch all expenses
 
+    // Calculate Total Expenses
+    const totalExpenses = expenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0
+    );
+
     const doc = new PDFDocument({ margin: 50 });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", 'attachment; filename="expenses.pdf"');
 
     doc.pipe(res);
 
-    // Title
+    // **Title**
     doc.fontSize(20).text("Expense Report", { align: "center" }).moveDown(2);
 
-    // Define Table Column Widths
+    // **Define Table Column Widths**
     const columnWidths = [100, 150, 250];
     const startX = 50;
     let y = doc.y;
@@ -89,6 +95,22 @@ export const exportPDF = async (req, res) => {
         });
       y += 20;
     });
+
+    // **Draw Line Above Total**
+    doc.moveTo(startX, y).lineTo(550, y).stroke();
+    y += 10;
+
+    // **Total Expenses Row**
+    doc
+      .fontSize(12)
+      .text("Total spends:", startX, y, {
+        width: columnWidths[0],
+        bold: true,
+      })
+      .text(totalExpenses.toString(), startX + columnWidths[0], y, {
+        width: columnWidths[1],
+        bold: true,
+      });
 
     doc.end();
   } catch (error) {
