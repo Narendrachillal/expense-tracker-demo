@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Container,
   Button,
@@ -17,115 +17,98 @@ import {
   InputLabel,
   Typography,
   Box,
-  styled,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import axios from "axios";
-
-const ButtonModal = styled(Button)({
-  width: "30%",
-  marginLeft:"30%"
-});
+import EditIcon from "@mui/icons-material/Edit";
+import { toast } from "react-toastify";
+import {
+  fetchExpenses,
+  addExpense,
+  deleteExpense,
+  updateExpense,
+  downloadExpensesPDF,
+} from "../api/apiService";
 
 const Dashboard = () => {
   const [expenses, setExpenses] = useState([]);
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Expense");
-  const [description, setDescription] = useState("");
+  const [form, setForm] = useState({
+    amount: "",
+    category: "",
+    description: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editExpense, setEditExpense] = useState(null);
 
-  const token = localStorage.getItem("token");
+  const downloadRef = useRef(null);
 
   // Fetch expenses
-  const fetchExpenses = async () => {
-    if (!token) return console.error("No token found in localStorage!");
-
+  const loadExpenses = useCallback(async () => {
     try {
-      const { data } = await axios.get(
-        "http://localhost:5000/api/expenses/get",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-
+      const data = await fetchExpenses();
       setExpenses(data);
     } catch (error) {
-      console.error("Fetch Error:", error.response?.data || error);
-      alert(error.response?.data?.message || "Error fetching expenses");
+      toast.error("Error fetching expenses");
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchExpenses();
-  }, [token]);
+    loadExpenses();
+  }, [loadExpenses]);
 
-  // Add expense
-  const addExpense = async () => {
-    try {
-      if (!token) return;
-      if (!amount || !category || !description)
-        return alert("Missing fields, Please fill all  section");
-      await axios.post(
-        "http://localhost:5000/api/expenses/add",
-        { amount, category, description },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchExpenses();
-      setAmount("");
-      setDescription("");
-      setCategory("");
-    } catch (error) {
-      alert("Error adding expense");
-      console.error(error);
-    }
+  // Handle form input change
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Delete expense
-  const deleteExpense = async (id) => {
-    if (!token) return;
+  // Handle adding or updating expense
+  const handleSaveExpense = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/expenses/delete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchExpenses();
-    } catch (error) {
-      alert("Error deleting expense");
-      console.error(error);
-    }
-  };
-  const handleDownloadPDF = async () => {
-    try {
-      const token = localStorage.getItem("token"); // Get JWT token from storage
-
-      if (!token) {
-        alert("You must be logged in to download the report.");
-        return;
+      if (editExpense) {
+        await updateExpense(editExpense._id, form);
+        toast.success("Expense updated successfully!");
+      } else {
+        await addExpense(form.amount, form.category, form.description);
+        toast.success("Expense added successfully!");
       }
-
-      const response = await axios.get(
-        "http://localhost:5000/api/expenses/export-pdf", // Update with your backend URL
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add token in headers
-          },
-          responseType: "blob", // Get binary data
-        }
-      );
-
-      // Create a downloadable PDF file
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "expenses.pdf"); // Set filename
-      document.body.appendChild(link);
-      link.click(); // Trigger download
-      document.body.removeChild(link);
+      setForm({ amount: "", category: "", description: "" });
+      setEditExpense(null);
+      setEditDialogOpen(false);
+      loadExpenses();
     } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert(error.response?.data?.message || "Error downloading the PDF");
+      toast.warn(error.message || "Error saving expense");
+    }
+  };
+
+  // Handle deleting expense
+  const handleDeleteExpense = async (id) => {
+    try {
+      await deleteExpense(id);
+      toast.success("Expense deleted successfully!");
+      loadExpenses();
+    } catch (error) {
+      toast.error("Error deleting expense");
+    }
+  };
+
+  // Handle downloading PDF
+  const handleDownloadPDF = async () => {
+    if (!expenses || expenses.length === 0) {
+      toast.warn("No expenses available to download.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await downloadExpensesPDF(expenses);
+    } catch (error) {
+      toast.error("Error downloading PDF. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -145,7 +128,8 @@ const Dashboard = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
+        alignItems: "center",
+        gap: 3,
       }}
     >
       {/* Summary Section */}
@@ -158,7 +142,7 @@ const Dashboard = () => {
           display: "flex",
           gap: 5,
           alignItems: "center",
-          marginLeft: "20%",
+          width: "60%",
         }}
       >
         <Typography variant="h6">Summary</Typography>
@@ -170,40 +154,32 @@ const Dashboard = () => {
       </Paper>
 
       {/* Input Fields */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          width: "500px",
-          marginLeft: "25%",
-        }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", width: "500px" }}>
         <TextField
+          name="amount"
           label="Amount"
           type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          value={form.amount}
+          onChange={handleChange}
           margin="normal"
         />
         <TextField
+          name="description"
           label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={form.description}
+          onChange={handleChange}
           margin="normal"
         />
         <FormControl margin="normal">
           <InputLabel>Category</InputLabel>
-          <Select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
+          <Select name="category" value={form.category} onChange={handleChange}>
             <MenuItem value="Expense">Expense</MenuItem>
             <MenuItem value="Income">Income</MenuItem>
           </Select>
         </FormControl>
-        <ButtonModal onClick={addExpense} variant="contained" color="primary">
-          Add Expense
-        </ButtonModal>
+        <Button onClick={handleSaveExpense} variant="contained" color="primary">
+          {editExpense ? "Update Expense" : "Add Expense"}
+        </Button>
       </Box>
 
       {/* Expense Table */}
@@ -226,7 +202,17 @@ const Dashboard = () => {
                   <TableCell>{exp.description}</TableCell>
                   <TableCell>
                     <IconButton
-                      onClick={() => deleteExpense(exp._id)}
+                      onClick={() => {
+                        setEditExpense(exp);
+                        setForm(exp);
+                        setEditDialogOpen(true);
+                      }}
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDeleteExpense(exp._id)}
                       color="error"
                     >
                       <DeleteIcon />
@@ -244,14 +230,63 @@ const Dashboard = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <ButtonModal
+
+      <Button
         variant="contained"
         color="primary"
         onClick={handleDownloadPDF}
-        sx={{ mt: 2 }}
+        disabled={loading}
+        ref={downloadRef}
       >
-        Download PDF Report
-      </ButtonModal>
+        {loading ? (
+          <CircularProgress size={24} color="inherit" />
+        ) : (
+          "Download PDF"
+        )}
+      </Button>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <DialogTitle>Edit Expense</DialogTitle>
+        <DialogContent>
+          <TextField
+            name="amount"
+            label="Amount"
+            type="number"
+            value={form.amount}
+            onChange={handleChange}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            name="description"
+            label="Description"
+            value={form.description}
+            onChange={handleChange}
+            fullWidth
+            margin="dense"
+          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Category</InputLabel>
+            <Select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+            >
+              <MenuItem value="Expense">Expense</MenuItem>
+              <MenuItem value="Income">Income</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleSaveExpense} color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

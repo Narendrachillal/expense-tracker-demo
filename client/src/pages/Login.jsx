@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { AuthContext } from "../context/AuthContext";
 import API from "../api/axiosInstance";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [userData, setUserData] = useState({ email: "", password: "" });
@@ -11,9 +12,10 @@ const Login = () => {
     try {
       const { data } = await API.post("/auth/login", userData);
       login(data.token);
+      toast.success("Logged in successfully");
     } catch (error) {
       console.log(error);
-      alert(error.response?.data?.message || "Login failed");
+      toast.error(error.response?.data?.message || "Login failed");
     }
   };
 

@@ -15,13 +15,13 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user); // Set user data
     } catch (error) {
       console.error("Session expired, please log in again.");
-      // logout();
     }
   };
   useEffect(() => {
+    // Check if user is already logged in
     const token = localStorage.getItem("token");
     if (token) {
-      verifyUser(token); // Check if token is valid
+      setUser(true); // Set user as authenticated
     }
   }, []);
 
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

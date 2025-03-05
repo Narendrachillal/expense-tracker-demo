@@ -3,8 +3,6 @@ import PDFDocument from "pdfkit";
 
 export const addExpense = async (req, res) => {
   try {
-    console.log("Request Body:", req.body); // Debugging incoming request
-
     const { amount, category, description } = req.body;
     if (!amount || !category || !description) {
       return res.status(400).json({ message: "All fields are required" });
@@ -116,5 +114,28 @@ export const exportPDF = async (req, res) => {
   } catch (error) {
     console.error("Error generating PDF:", error);
     res.status(500).json({ error: "Failed to generate PDF" });
+  }
+};
+
+export const editExpense = async (req, res) => {
+  try {
+    const { amount, category, description } = req.body;
+
+    if (!amount || !category || !description) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    const updatedExpense = await Expense.findByIdAndUpdate(
+      req.params.id,
+      { amount, category, description }
+      // { new: true }
+    );
+
+    if (!updatedExpense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
+    res.json(updatedExpense);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating expense", error });
   }
 };

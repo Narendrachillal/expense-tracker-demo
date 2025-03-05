@@ -24,18 +24,6 @@ app.use(
 app.use("/api/auth", authRoute);
 app.use("/api/expenses", expenseRoute);
 
-// Verify user session
-app.get("/api/auth/me", authMiddleware, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json({ user });
-    console.log(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 app.listen(process.env.PORT, () =>
   console.log(`Server running on port ${process.env.PORT}`)
 );
