@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/axiosInstance"; // <-- Ensure this is your API instances
+import API from "../api/axiosInstance"; 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       });
       setUser(data.user); // Set user data
     } catch (error) {
-      console.error("Session expired, please log in again.");
+      console.error("Session expired, please log in again.", error);
     }
   };
   useEffect(() => {

@@ -4,8 +4,6 @@ import cors from "cors";
 import { connectDB } from "./config/config.js";
 import authRoute from "./routes/authRoutes.js";
 import expenseRoute from "./routes/expenseRoutes.js";
-import { authMiddleware } from "./middlewares/authMiddelwares.js";
-import User from "./Models/User.js";
 
 dotenv.config();
 connectDB();
