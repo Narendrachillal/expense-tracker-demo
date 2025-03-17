@@ -19,28 +19,32 @@ const Register = () => {
     try {
       const { data } = await API.post("/auth/register", userData);
 
-      toast.success(" Registration successful! Redirecting..."); //  Success notification
+      toast.success("Registration successful! Redirecting..."); // Success notification
 
       localStorage.setItem("token", data.token);
       setUser(true); // Set user as logged in
 
       setTimeout(() => navigate("/dashboard"), 2000); // Delay navigation slightly for better UX
     } catch (error) {
-      toast.error(error.response?.data?.message || " Registration failed"); //  Error notification
+      toast.error(error.response?.data?.message || "Registration failed"); // Error notification
     }
   };
 
   return (
     <Container
       sx={{
-        width: "500px",
+        maxWidth: { xs: "90%", sm: "500px" }, // Adjust width based on screen size
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: 2, // Adjusted gap for better spacing
         alignItems: "center",
+        padding: "20px",
       }}
     >
-      <Typography variant="h4">Register</Typography>
+      <Typography variant="h4" textAlign="center">
+        Register
+      </Typography>
+
       <TextField
         label="Name"
         fullWidth
@@ -61,7 +65,11 @@ const Register = () => {
         onChange={(e) => setUserData({ ...userData, password: e.target.value })}
       />
 
-      <Button variant="contained" onClick={handleRegister}>
+      <Button
+        variant="contained"
+        sx={{ width: { xs: "100%", sm: "200px" } }} // Full-width button on mobile
+        onClick={handleRegister}
+      >
         Register
       </Button>
     </Container>

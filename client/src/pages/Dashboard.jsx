@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Container,
   Button,
@@ -45,14 +45,11 @@ const Dashboard = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editExpense, setEditExpense] = useState(null);
 
-  const downloadRef = useRef(null);
-
-  // Fetch expenses
   const loadExpenses = useCallback(async () => {
     try {
       const data = await fetchExpenses();
       setExpenses(data);
-    } catch (error) {
+    } catch {
       toast.error("Error fetching expenses");
     }
   }, []);
@@ -61,12 +58,10 @@ const Dashboard = () => {
     loadExpenses();
   }, [loadExpenses]);
 
-  // Handle form input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle adding or updating expense
   const handleSaveExpense = async () => {
     try {
       if (editExpense) {
@@ -80,47 +75,42 @@ const Dashboard = () => {
       setEditExpense(null);
       setEditDialogOpen(false);
       loadExpenses();
-    } catch (error) {
-      toast.warn(error.message || "Error saving expense");
+    } catch {
+      toast.warn("Error saving expense");
     }
   };
 
-  // Handle deleting expense
   const handleDeleteExpense = async (id) => {
     try {
       await deleteExpense(id);
       toast.success("Expense deleted successfully!");
       loadExpenses();
-    } catch (error) {
+    } catch {
       toast.error("Error deleting expense");
     }
   };
 
-  // Handle downloading PDF
   const handleDownloadPDF = async () => {
-    if (!expenses || expenses.length === 0) {
+    if (!expenses.length) {
       toast.warn("No expenses available to download.");
       return;
     }
     setLoading(true);
     try {
       await downloadExpensesPDF(expenses);
-    } catch (error) {
-      toast.error("Error downloading PDF. Please try again.");
+    } catch {
+      toast.error("Error downloading PDF.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate totals
   const totalIncome = expenses
     .filter((exp) => exp.category === "Income")
     .reduce((acc, exp) => acc + exp.amount, 0);
-
   const totalExpenses = expenses
     .filter((exp) => exp.category === "Expense")
     .reduce((acc, exp) => acc + exp.amount, 0);
-
   const balance = totalIncome - totalExpenses;
 
   return (
@@ -132,7 +122,6 @@ const Dashboard = () => {
         gap: 3,
       }}
     >
-      {/* Summary Section */}
       <Paper
         elevation={0}
         sx={{
@@ -140,9 +129,9 @@ const Dashboard = () => {
           marginBottom: 2,
           textAlign: "center",
           display: "flex",
-          gap: 5,
+          flexDirection: "column",
           alignItems: "center",
-          width: "60%",
+          width: "100%",
         }}
       >
         <Typography variant="h6">Summary</Typography>
@@ -153,8 +142,14 @@ const Dashboard = () => {
         </Typography>
       </Paper>
 
-      {/* Input Fields */}
-      <Box sx={{ display: "flex", flexDirection: "column", width: "500px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          maxWidth: "500px",
+        }}
+      >
         <TextField
           name="amount"
           label="Amount"
@@ -162,6 +157,7 @@ const Dashboard = () => {
           value={form.amount}
           onChange={handleChange}
           margin="normal"
+          fullWidth
         />
         <TextField
           name="description"
@@ -169,8 +165,9 @@ const Dashboard = () => {
           value={form.description}
           onChange={handleChange}
           margin="normal"
+          fullWidth
         />
-        <FormControl margin="normal">
+        <FormControl margin="normal" fullWidth>
           <InputLabel>Category</InputLabel>
           <Select name="category" value={form.category} onChange={handleChange}>
             <MenuItem value="Expense">Expense</MenuItem>
@@ -182,8 +179,7 @@ const Dashboard = () => {
         </Button>
       </Box>
 
-      {/* Expense Table */}
-      <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+      <TableContainer component={Paper} sx={{ marginTop: 2, width: "100%" }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -194,7 +190,7 @@ const Dashboard = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenses.length > 0 ? (
+            {expenses.length ? (
               expenses.map((exp) => (
                 <TableRow key={exp._id}>
                   <TableCell>{exp.amount}</TableCell>
@@ -236,7 +232,6 @@ const Dashboard = () => {
         color="primary"
         onClick={handleDownloadPDF}
         disabled={loading}
-        ref={downloadRef}
       >
         {loading ? (
           <CircularProgress size={24} color="inherit" />
@@ -245,7 +240,6 @@ const Dashboard = () => {
         )}
       </Button>
 
-      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
         <DialogTitle>Edit Expense</DialogTitle>
         <DialogContent>

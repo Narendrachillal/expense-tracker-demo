@@ -22,26 +22,38 @@ const Login = () => {
   return (
     <Container
       sx={{
-        width: "500px",
+        maxWidth: "90%",
+        width: "400px",
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: "16px",
         alignItems: "center",
+        padding: "20px",
+        boxShadow: 3,
+        borderRadius: "8px",
+        bgcolor: "background.paper",
+        mt: "50px",
       }}
     >
       <Typography variant="h4">Login</Typography>
       <TextField
         label="Email"
         fullWidth
+        variant="outlined"
         onChange={(e) => setUserData({ ...userData, email: e.target.value })}
       />
       <TextField
         label="Password"
         type="password"
         fullWidth
+        variant="outlined"
         onChange={(e) => setUserData({ ...userData, password: e.target.value })}
       />
-      <Button variant="contained" sx={{ width: "200px" }} onClick={handleLogin}>
+      <Button
+        variant="contained"
+        sx={{ width: "100%", py: 1.2 }}
+        onClick={handleLogin}
+      >
         Login
       </Button>
     </Container>

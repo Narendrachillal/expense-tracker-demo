@@ -6,7 +6,6 @@ import { saveAs } from "file-saver";
 export const fetchExpenses = async () => {
   try {
     const { data } = await API.get("expenses/get");
-    console.log(data);
     return data;
   } catch (error) {
     console.error("Fetch Error:", error.response?.data || error);
@@ -16,9 +15,9 @@ export const fetchExpenses = async () => {
 
 // Add a new expense
 export const addExpense = async (amount, category, description) => {
-    if (!amount || !category || !description) {
-      throw new Error("Missing fields, Please fill all sections");
-    }
+  if (!amount || !category || !description) {
+    throw new Error("Missing fields, Please fill all sections");
+  }
 
   try {
     await API.post("expenses/add", { amount, category, description });
