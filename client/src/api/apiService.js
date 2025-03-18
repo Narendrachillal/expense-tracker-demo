@@ -2,7 +2,6 @@ import API from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
 
-// Fetch expenses
 export const fetchExpenses = async () => {
   try {
     const { data } = await API.get("expenses/get");
@@ -13,7 +12,6 @@ export const fetchExpenses = async () => {
   }
 };
 
-// Add a new expense
 export const addExpense = async (amount, category, description) => {
   if (!amount || !category || !description) {
     throw new Error("Missing fields, Please fill all sections");
@@ -27,7 +25,6 @@ export const addExpense = async (amount, category, description) => {
   }
 };
 
-// Delete an expense
 export const deleteExpense = async (id) => {
   try {
     await API.delete(`expenses/delete/${id}`);
@@ -36,18 +33,17 @@ export const deleteExpense = async (id) => {
     throw error;
   }
 };
-//update expenses
+
 export const updateExpense = async (id, updatedExpense) => {
   const response = await API.put(`expenses/edit/${id}`, updatedExpense);
   return response.data;
 };
 
-// Download expenses as PDF
 export const downloadExpensesPDF = async (expenses) => {
   try {
     if (!expenses || expenses.length === 0) {
       toast.warn("No expenses available to download.");
-      return null; // Return null instead of continuing
+      return null;
     }
     const token = localStorage.getItem("token");
     if (!token) {
@@ -56,11 +52,10 @@ export const downloadExpensesPDF = async (expenses) => {
     }
 
     const response = await API.get("expenses/export-pdf", {
-      headers: { Authorization: `Bearer ${token}` }, // ✅ Added authentication
+      headers: { Authorization: `Bearer ${token}` },
       responseType: "blob",
     });
 
-    // ✅ Save the file using `file-saver`
     saveAs(response.data, "expenses.pdf");
 
     toast.success("PDF downloaded successfully!");

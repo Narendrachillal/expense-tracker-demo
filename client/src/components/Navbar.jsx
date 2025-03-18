@@ -11,13 +11,12 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const { darkMode, setDarkMode } = useContext(ThemeContext);
   const location = useLocation();
-  // const navigate = useNavigate();
+
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <AppBar position="static">
       <Toolbar>
-        {/* Logo / Title */}
         <Typography
           variant="h6"
           sx={{
@@ -37,7 +36,7 @@ const Navbar = () => {
           {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>
 
-        {/* Auth Buttons - Responsive */}
+        {/* Auth Buttons */}
         {user ? (
           <Button color="inherit" onClick={logout}>
             Logout
@@ -75,18 +74,20 @@ const Navbar = () => {
           </>
         )}
 
-        {/* Mobile Menu Button */}
-        <IconButton
-          color="inherit"
-          sx={{ display: { sm: "none" } }}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <MenuIcon />
-        </IconButton>
+        {/* Show Mobile Menu Icon only if user is NOT logged in */}
+        {!user && (
+          <IconButton
+            color="inherit"
+            sx={{ display: { sm: "none" } }}
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
       </Toolbar>
 
-      {/* Mobile Menu */}
-      {menuOpen && (
+      {/* Mobile Menu (Only show when user is NOT logged in) */}
+      {!user && menuOpen && (
         <Toolbar
           sx={{
             display: "flex",
@@ -97,16 +98,12 @@ const Navbar = () => {
             paddingBottom: 1,
           }}
         >
-          {!user && (
-            <>
-              <Button component={Link} to="/login" color="inherit">
-                Login
-              </Button>
-              <Button component={Link} to="/register" color="inherit">
-                Register
-              </Button>
-            </>
-          )}
+          <Button component={Link} to="/login" color="inherit">
+            Login
+          </Button>
+          <Button component={Link} to="/register" color="inherit">
+            Register
+          </Button>
         </Toolbar>
       )}
     </AppBar>
